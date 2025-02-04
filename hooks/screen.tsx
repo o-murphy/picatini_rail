@@ -7,6 +7,7 @@ const defaultValues = {
   screenClick: 1.42,
   zeroDistanceM: 100,
   targetDistanceM: 2000,
+  dropAtZeroMoa: 0,
   dropAtTargetMoa: 110,
   zeroY: 0,
   railAngle: 0,
