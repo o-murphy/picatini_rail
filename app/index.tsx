@@ -85,7 +85,7 @@ const ScreenLayer = (size: { width?: number; height?: number } = { width: 720, h
 
 const CalimatorLayer = ({ width, height }: { width: number; height: number }) => {
 
-  const { zeroY, moa2px } = useScreenSettings();
+  const { zeroY, railAngle, screenClick, moa2px } = useScreenSettings();
 
   const centerX = width / 2;
   const centerY = height / 2;
@@ -94,15 +94,17 @@ const CalimatorLayer = ({ width, height }: { width: number; height: number }) =>
 
   const moaNums = range(-30, 30, 10);
 
+  const localZeroY = moa2px(zeroY * screenClick * 0.3, height) - moa2px(railAngle, height)
+
   const xLines = () => moaNums.map((xMoa, index) => {
     const xPx = centerX + moa2px(xMoa, height);
     return (
       <Line
         key={index}
         x1={xPx}
-        y1={centerY - w10 + zeroY}
+        y1={centerY - w10 + localZeroY}
         x2={xPx}
-        y2={centerY + w10 + zeroY}
+        y2={centerY + w10 + localZeroY}
         stroke="blue"
         strokeWidth={1}
       />
@@ -115,9 +117,9 @@ const CalimatorLayer = ({ width, height }: { width: number; height: number }) =>
       <Line
         key={index}
         x1={centerX + w10}
-        y1={yPx + zeroY}
+        y1={yPx + localZeroY}
         x2={centerX - w10}
-        y2={yPx + zeroY}
+        y2={yPx + localZeroY}
         stroke="blue"
         strokeWidth={1}
       />
@@ -134,19 +136,21 @@ const CalimatorLayer = ({ width, height }: { width: number; height: number }) =>
 
 const DropLayer = ({ width, height }: { width: number; height: number }) => {
 
-  const { zeroY, moa2px, dropAtTargetMoa } = useScreenSettings();
+  const { zeroY, railAngle, moa2px, screenClick, dropAtTargetMoa, zeroDistanceM, targetDistanceM } = useScreenSettings();
 
   const centerX = width / 2;
   const centerY = height / 2;
 
+  const localZeroY = moa2px(zeroY * screenClick * 0.3, height) - moa2px(railAngle, height)
+
   const p1 = {
     x: centerX,
-    y: centerY + zeroY,
+    y: centerY + localZeroY,
   }
 
   const p2 = {
     x: centerX,
-    y: centerY + zeroY + moa2px(dropAtTargetMoa, height),
+    y: centerY + localZeroY + moa2px(dropAtTargetMoa, height),
   }
 
   return (
@@ -160,7 +164,13 @@ const DropLayer = ({ width, height }: { width: number; height: number }) => {
         strokeWidth={2}
       />
       <Circle cx={p1.x} cy={p1.y} r={5} fill={"red"} />
+      <SvgText x={p1.x} y={p1.y - width / 50} fill={"red"} fontSize={width / 50} textAnchor="middle">
+        {zeroDistanceM.toFixed(0)}
+      </SvgText>
       <Circle cx={p2.x} cy={p2.y} r={5} fill={"red"} />
+      <SvgText x={p2.x} y={p2.y + 1.5 * width / 50} fill={"red"} fontSize={width / 50} textAnchor="middle">
+        {targetDistanceM.toFixed(0)}
+      </SvgText>
     </Svg>
   )
 }
@@ -196,11 +206,29 @@ const Reticle = () => {
 
 
 const Controls = () => {
-  const { setValues, zeroY } = useScreenSettings();
+  const { setValues, zeroY, railAngle, dropAtTargetMoa, screenClick } = useScreenSettings();
 
-  const valueChange = (value: number) => {
+  const clickChange = (value: number) => {
+    setValues({
+      screenClick: value
+    });
+  };
+
+  const zeroYChange = (value: number) => {
     setValues({
       zeroY: value
+    });
+  };
+
+  const railChange = (value: number) => {
+    setValues({
+      railAngle: value
+    });
+  };
+
+  const dropAtTargetChange = (value: number) => {
+    setValues({
+      dropAtTargetMoa: value
     });
   };
 
@@ -212,13 +240,56 @@ const Controls = () => {
         width: "100%",
       }}
     >
-      <Text>Clcik size, cm/100m</Text>
+      <Text>Click size, cm/100m</Text>
+      <InputSpinner 
+        // decimalSeparator="."
+        precision={2}
+        type={"real"}
+        min={0}
+        max={10}
+        step={0.01}
+        // editable={false}
+        value={screenClick}
+        onChange={clickChange}
+        textColor="white"
+        showBorder={true}
+        rounded={false}
+      />
+      <Text>Drop at target, MOA</Text>
+      <InputSpinner 
+        min={0}
+        max={200}
+        step={5}
+        // longStep={10}
+        editable={false}
+        value={dropAtTargetMoa}
+        onChange={dropAtTargetChange}
+        textColor="white"
+        showBorder={true}
+        rounded={false}
+      />
+      <Text>Zero Y, px</Text>
       <InputSpinner 
         min={-250}
         max={250}
         step={5}
+        // longStep={10}
+        editable={false}
         value={zeroY}
-        onChange={valueChange}
+        onChange={zeroYChange}
+        textColor="white"
+        showBorder={true}
+        rounded={false}
+      />
+      <Text>Picatini rail angle, MOA</Text>
+      <InputSpinner 
+        min={-50}
+        max={50}
+        step={5}
+        // longStep={5}
+        editable={false}
+        value={railAngle}
+        onChange={railChange}
         textColor="white"
         showBorder={true}
         rounded={false}

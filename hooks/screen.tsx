@@ -7,8 +7,9 @@ const defaultValues = {
   screenClick: 1.42,
   zeroDistanceM: 100,
   targetDistanceM: 2000,
-  dropAtTargetMoa: 88,
+  dropAtTargetMoa: 110,
   zeroY: 0,
+  railAngle: 0,
 };
 
 // Type definitions
